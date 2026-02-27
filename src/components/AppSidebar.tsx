@@ -2,22 +2,9 @@ import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users,
-  ShoppingBag,
-  Sparkles,
-  Video,
-  Pencil,
-  RefreshCw,
-  Music2,
-  FileText,
-  DollarSign,
-  FolderOpen,
-  Lock,
-  Unlock,
-  ShieldAlert,
-  ChevronLeft,
-  ChevronRight,
-  Zap,
+  Users, ShoppingBag, Sparkles, Video, Pencil, RefreshCw,
+  Music2, FileText, DollarSign, FolderOpen, Lock, Unlock,
+  ShieldAlert, ChevronLeft, ChevronRight, Zap, X,
 } from "lucide-react";
 import { useAdultSection } from "@/hooks/use-adult-section";
 import AdultPasswordModal from "./AdultPasswordModal";
@@ -48,11 +35,20 @@ const adultItems = [
   { title: "Adult Media Library", url: "/adult/media-library", icon: FolderOpen },
 ];
 
-const AppSidebar = () => {
+interface AppSidebarProps {
+  onCloseMobile?: () => void;
+  isMobile?: boolean;
+}
+
+const AppSidebar = ({ onCloseMobile, isMobile }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { isUnlocked, lock } = useAdultSection();
   const location = useLocation();
+
+  // On mobile, never collapse — always show full sidebar
+  const isCollapsed = isMobile ? false : collapsed;
+  const sidebarWidth = isCollapsed ? 64 : 260;
 
   const linkClass = (path: string) => {
     const active = location.pathname === path;
@@ -72,42 +68,39 @@ const AppSidebar = () => {
     }`;
   };
 
+  const handleNavClick = () => {
+    if (isMobile && onCloseMobile) onCloseMobile();
+  };
+
   return (
     <>
       <motion.aside
-        animate={{ width: collapsed ? 64 : 260 }}
+        animate={{ width: sidebarWidth }}
         transition={{ duration: 0.2 }}
         className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-sidebar-border p-4">
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center gap-2"
-            >
+          {!isCollapsed && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
               <Zap className="h-6 w-6 text-primary" />
-              <span className="text-sm font-bold text-foreground">
-                AI Influencer Studio
-              </span>
+              <span className="text-sm font-bold text-foreground">AI Influencer Studio</span>
             </motion.div>
           )}
-          {collapsed && <Zap className="mx-auto h-6 w-6 text-primary" />}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="rounded-md p-1 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </button>
+          {isCollapsed && <Zap className="mx-auto h-6 w-6 text-primary" />}
+          {isMobile ? (
+            <button onClick={onCloseMobile} className="rounded-md p-1 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+              <X className="h-5 w-5" />
+            </button>
+          ) : (
+            <button onClick={() => setCollapsed(!collapsed)} className="rounded-md p-1 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          )}
         </div>
 
         {/* Credits */}
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="mx-4 mt-3 rounded-lg bg-muted px-3 py-2">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Credits</span>
@@ -118,38 +111,29 @@ const AppSidebar = () => {
 
         {/* Scrollable nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {/* Safe Section */}
-          {!collapsed && (
+          {!isCollapsed && (
             <div className="mb-2 flex items-center gap-2 px-3">
               <div className="h-2 w-2 rounded-full bg-safe" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-safe">
-                Safe Content
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-safe">Safe Content</span>
             </div>
           )}
           <div className="space-y-0.5">
             {safeItems.map((item) => (
-              <NavLink key={item.url} to={item.url} className={linkClass(item.url)}>
+              <NavLink key={item.url} to={item.url} className={linkClass(item.url)} onClick={handleNavClick}>
                 <item.icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.title}</span>}
+                {!isCollapsed && <span>{item.title}</span>}
               </NavLink>
             ))}
           </div>
 
-          {/* Divider */}
           <div className="my-4 border-t border-sidebar-border" />
 
-          {/* Adult Section */}
-          {!collapsed && (
+          {!isCollapsed && (
             <div className="mb-2 flex items-center gap-2 px-3">
               <div className="h-2 w-2 rounded-full bg-adult animate-pulse-glow" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-adult">
-                Adult Content
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-adult">Adult Content</span>
               {isUnlocked ? (
-                <span className="ml-auto rounded bg-adult/20 px-1.5 py-0.5 text-[10px] font-bold text-adult">
-                  ACTIVE
-                </span>
+                <span className="ml-auto rounded bg-adult/20 px-1.5 py-0.5 text-[10px] font-bold text-adult">ACTIVE</span>
               ) : (
                 <Lock className="ml-auto h-3 w-3 text-adult" />
               )}
@@ -160,13 +144,9 @@ const AppSidebar = () => {
             <>
               <div className="space-y-0.5">
                 {adultItems.map((item) => (
-                  <NavLink
-                    key={item.url}
-                    to={item.url}
-                    className={adultLinkClass(item.url)}
-                  >
+                  <NavLink key={item.url} to={item.url} className={adultLinkClass(item.url)} onClick={handleNavClick}>
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span>{item.title}</span>}
+                    {!isCollapsed && <span>{item.title}</span>}
                   </NavLink>
                 ))}
               </div>
@@ -175,7 +155,7 @@ const AppSidebar = () => {
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-adult/30 px-3 py-2 text-xs text-adult transition-all hover:bg-adult-muted"
               >
                 <Lock className="h-3 w-3" />
-                {!collapsed && <span>Lock Adult Section</span>}
+                {!isCollapsed && <span>Lock Adult Section</span>}
               </button>
             </>
           ) : (
@@ -184,16 +164,13 @@ const AppSidebar = () => {
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-adult/30 bg-adult-muted px-3 py-2.5 text-sm text-adult transition-all hover:bg-adult/20"
             >
               <Unlock className="h-4 w-4" />
-              {!collapsed && <span>Unlock Adult Section</span>}
+              {!isCollapsed && <span>Unlock Adult Section</span>}
             </button>
           )}
         </nav>
       </motion.aside>
 
-      <AdultPasswordModal
-        open={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-      />
+      <AdultPasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
     </>
   );
 };
