@@ -4,10 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, ShoppingBag, Sparkles, Video, Pencil, RefreshCw,
   Music2, FileText, DollarSign, FolderOpen, Lock, Unlock,
-  ShieldAlert, ChevronLeft, ChevronRight, Zap, X,
+  ShieldAlert, ChevronLeft, ChevronRight, Zap, X, LogOut,
 } from "lucide-react";
 import { useAdultSection } from "@/hooks/use-adult-section";
 import AdultPasswordModal from "./AdultPasswordModal";
+import { supabase } from "@/integrations/supabase/client";
 
 const safeItems = [
   { title: "Characters", url: "/characters", icon: Users },
@@ -168,6 +169,16 @@ const AppSidebar = ({ onCloseMobile, isMobile }: AppSidebarProps) => {
             </button>
           )}
         </nav>
+
+        <div className="border-t border-sidebar-border p-3">
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            {!isCollapsed && <span>Sign Out</span>}
+          </button>
+        </div>
       </motion.aside>
 
       <AdultPasswordModal open={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
